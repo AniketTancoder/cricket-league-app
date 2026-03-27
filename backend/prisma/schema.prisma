@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      String   @default("viewer") // admin, viewer
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Team {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  logo      String?
+  players   Player[]
+  homeMatches    Match[] @relation("HomeTeam")
+  awayMatches    Match[] @relation("AwayTeam")
+  pointsTable    PointsTable?
+}
+
+model Player {
+  id      Int    @id @default(autoincrement())
+  name    String
+  teamId  Int
+  team    Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@index([teamId])
+}
+
+model Match {
+  id            Int       @id @default(autoincrement())
+  team1Id       Int
+  team2Id       Int
+  team1         Team      @relation("HomeTeam", fields: [team1Id], references: [id])
+  team2         Team      @relation("AwayTeam", fields: [team2Id], references: [id])
+  matchDate     DateTime?
+  matchTime     String?
+  venue         String?
+  
+  // Match format
+  totalOvers    Int       @default(20) // Total overs for the match (e.g., 20, 50, etc.)
+  
+  // Toss result - which team bats first
+  battingFirst  Int?      // team1Id or team2Id of the team that won toss and bats first
+  
+  // Team 1 batting
+  team1Score    Int?
+  team1Overs    Float?    // Actual overs played (e.g., 19.5)
+  
+  // Team 2 batting
+  team2Score    Int?
+  team2Overs    Float?    // Actual overs played (e.g., 18.3)
+  
+  winnerTeamId  Int?
+  status        String    @default("scheduled") // scheduled, in_progress, completed, abandoned, tie
+  round         String    @default("league") // league, semi_final_1, semi_final_2, final
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([team1Id])
+  @@index([team2Id])
+  @@index([status])
+}
+
+model PointsTable {
+  id           Int     @id @default(autoincrement())
+  teamId       Int     @unique
+  team         Team    @relation(fields: [teamId], references: [id])
+  matches      Int     @default(0)
+  wins         Int     @default(0)
+  losses       Int     @default(0)
+  ties         Int     @default(0)
+  points       Int     @default(0)
+  runsScored   Int     @default(0)
+  oversFaced   Float   @default(0)
+  runsConceded Int     @default(0)
+  oversBowled  Float   @default(0)
+  nrr          Float   @default(0)
+  
+  @@index([teamId])
+  @@index([nrr])
+}
+
+model Playoff {
+  id           Int      @id @default(autoincrement())
+  type         String   // semi_final_1, semi_final_2, final
+  team1Id      Int?
+  team2Id      Int?
+  team1Score   Int?
+  team1Overs   Float?
+  team2Score   Int?
+  team2Overs   Float?
+  winnerTeamId Int?
+  status       String   @default("scheduled")
+  matchDate    DateTime?
+  matchTime    String?
+  venue        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([type])
+}
