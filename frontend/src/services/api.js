@@ -1,13 +1,5 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-
-// Environment-specific configuration
-const isProduction = import.meta.env.PROD;
-const isRailway = import.meta.env.VITE_IS_RAILWAY;
-const apiUrl =
-  isProduction && isRailway
-    ? import.meta.env.VITE_RAILWAY_API_URL
-    : import.meta.env.VITE_API_URL;
+  import.meta.env.VITE_API_URL || "https://cricket-league-app.onrender.com/api";
 
 class ApiService {
   constructor() {
@@ -34,7 +26,7 @@ class ApiService {
   }
 
   async request(endpoint, options = {}) {
-    const url = `${apiUrl || API_BASE_URL}${endpoint}`;
+    const url = `${API_BASE_URL}${endpoint}`;
 
     // If body is FormData, don't set Content-Type (browser will set it with boundary)
     const isFormData = options.body instanceof FormData;
